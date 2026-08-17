@@ -216,3 +216,10 @@ __marimo__/
 
 # Streamlit
 .streamlit/secrets.toml
+
+# python
+anypick-python/**/__pycache__/
+anypick-python/.pytest_cache/
+anypick-python/*.egg-info/
+anypick-python/build/
+anypick-python/dist/

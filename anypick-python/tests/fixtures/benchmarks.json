@@ -1,0 +1,73 @@
+{
+  "data": [
+    {
+      "agentic_index": 58.3,
+      "coding_index": 65.8,
+      "display_name": "GPT-4o",
+      "intelligence_index": 71.2,
+      "model_permaslug": "openai/gpt-4o",
+      "pricing": { "completion": "0.00001", "prompt": "0.0000025" },
+      "source": "artificial-analysis"
+    },
+    {
+      "agentic_index": 50.1,
+      "coding_index": 60.0,
+      "display_name": "Llama 3.3 70B Instruct",
+      "intelligence_index": 66.5,
+      "model_permaslug": "meta-llama/llama-3.3-70b-instruct",
+      "pricing": { "completion": "0.00000032", "prompt": "0.0000001" },
+      "source": "artificial-analysis"
+    },
+    {
+      "agentic_index": 72.0,
+      "coding_index": 80.5,
+      "display_name": "Qwen3.8 27B",
+      "intelligence_index": 74.0,
+      "model_permaslug": "qwen/qwen3.8-27b",
+      "pricing": { "completion": "0.0000032", "prompt": "0.00000045" },
+      "source": "artificial-analysis"
+    },
+    {
+      "accuracy": 0.72,
+      "accuracy_stddev": 0.03,
+      "avg_cost_per_task": 0.002,
+      "benchmark_type": "gpqa_diamond",
+      "display_name": "GPT-4o",
+      "last_run_timestamp": "2026-06-03T12:00:00Z",
+      "model_permaslug": "openai/gpt-4o",
+      "source": "openrouter",
+      "total_tasks": 300
+    },
+    {
+      "accuracy": 0.41,
+      "accuracy_stddev": 0.04,
+      "avg_cost_per_task": 0.0004,
+      "benchmark_type": "gpqa_diamond",
+      "display_name": "Llama 3.3 70B Instruct",
+      "last_run_timestamp": "2026-06-03T12:00:00Z",
+      "model_permaslug": "meta-llama/llama-3.3-70b-instruct",
+      "source": "openrouter",
+      "total_tasks": 300
+    },
+    {
+      "accuracy": 0.55,
+      "accuracy_stddev": 0.03,
+      "avg_cost_per_task": 0.0011,
+      "benchmark_type": "tau_bench_verified_airline",
+      "display_name": "GPT-4o",
+      "last_run_timestamp": "2026-06-03T12:00:00Z",
+      "model_permaslug": "openai/gpt-4o",
+      "source": "openrouter",
+      "total_tasks": 200
+    }
+  ],
+  "meta": {
+    "as_of": "2026-06-03T12:00:00Z",
+    "citation": "Source: Artificial Analysis (artificialanalysis.ai) via OpenRouter (openrouter.ai/rankings).",
+    "model_count": 50,
+    "source": null,
+    "source_url": null,
+    "task_type": null,
+    "version": "v1"
+  }
+}

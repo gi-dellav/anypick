@@ -60,7 +60,7 @@ class BenchmarkScore:
     Attributes:
         model_id: joins to ``Model.id``.
         source: e.g. ``"artificial-analysis"``, ``"openrouter"``.
-        task_type: ``"coding" | "intelligence" | "agentic" | "search"`` or None.
+        task_type: ``"coding" | "intelligence" | "agentic"`` or None.
         benchmark_type: e.g. ``"gpqa_diamond"`` or None.
         score: the single comparable number for this source.
         accuracy: raw accuracy when the source exposes it (else None).

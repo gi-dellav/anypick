@@ -28,12 +28,12 @@ _AA_INDEX_FIELDS = {
     "agentic": "agentic_index",
 }
 
-# design-arena category -> score field (v1 best-effort map; the source rarely
-# surfaces here and the picker treats it opaquely anyway).
-_DA_CATEGORY_SCORE = {
-    "overall": "score",
-    "design": "design_score",
-}
+# design-arena: the API narrows by `arena` (models|builders|agents) and
+# `category` (codecategories, uicomponent, gamedev, 3d, dataviz, image, video,
+# svg). OpenRouter does not publish a fixed response shape for this source, so
+# the mapper is deliberately defensive: it tries the obvious numeric fields in
+# order and records the category under `benchmark_type`.
+_DA_SCORE_FIELDS = ("score", "elo", "arena_elo", "category_score")
 
 
 def _f(value: Any) -> float:
@@ -134,6 +134,9 @@ class OpenRouterBenchmarkObtainer:
         source: str | None = None,
         task_type: str | None = None,
         benchmark_type: str | None = None,
+        arena: str | None = None,
+        category: str | None = None,
+        max_results: int | None = None,
         **opts: Any,
     ) -> list[BenchmarkScore]:
         if not self.api_key:
@@ -141,13 +144,22 @@ class OpenRouterBenchmarkObtainer:
 
         url = f"{self.base_url}/benchmarks"
         headers = {"Authorization": f"Bearer {self.api_key}", "Accept": "application/json"}
+        # Server-side query params per the /benchmarks OpenAPI:
+        #   source, task_type, arena, category, max_results
+        # NOTE: ``benchmark_type`` is *not* a server query param — it is a
+        # response field on ``openrouter``-source items. We narrow on it
+        # client-side below to honor the Protocol's narrowing hint.
         params: dict[str, str] = {}
         if source:
             params["source"] = source
         if task_type:
             params["task_type"] = task_type
-        if benchmark_type:
-            params["benchmark_type"] = benchmark_type
+        if arena:
+            params["arena"] = arena
+        if category:
+            params["category"] = category
+        if max_results is not None:
+            params["max_results"] = str(max_results)
 
         resp = _request(
             "GET",
@@ -158,7 +170,10 @@ class OpenRouterBenchmarkObtainer:
             max_retries=self.max_retries,
         )
         data = resp.get("data") or []
-        return [_map_benchmark(item, task_type) for item in data]
+        scores = [_map_benchmark(item, task_type) for item in data]
+        if benchmark_type:
+            scores = [s for s in scores if s.benchmark_type == benchmark_type]
+        return scores
 
 
 def _map_benchmark(item: dict[str, Any], requested_task_type: str | None) -> BenchmarkScore:
@@ -189,15 +204,22 @@ def _map_benchmark(item: dict[str, Any], requested_task_type: str | None) -> Ben
             raw=item,
         )
     if src == "design-arena":
-        # v1: record the category under benchmark_type and use 'score' if present.
+        # OpenRouter doesn't publish a fixed design-arena item shape. Narrowing
+        # happens server-side via `arena`/`category` query params; here we record
+        # the category under `benchmark_type` and pick the first available
+        # numeric score field.
         category = item.get("category")
-        field = _DA_CATEGORY_SCORE.get(category or "", "score")
+        score = 0.0
+        for field in _DA_SCORE_FIELDS:
+            if item.get(field) is not None:
+                score = _f(item.get(field))
+                break
         return BenchmarkScore(
             model_id=model_id,
             source="design-arena",
             task_type=None,
             benchmark_type=category,
-            score=_f(item.get(field)),
+            score=score,
             accuracy=None,
             stddev=None,
             raw=item,

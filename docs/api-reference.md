@@ -106,8 +106,8 @@ A `ModelFilters` object is a pure spec — no I/O. Apply it with
 @dataclass
 class BenchmarkThreshold:
     source:         str | None = None      # default: any source
-    task_type:      str | None = None      # "coding" | "intelligence" | "agentic" | "search"
-    benchmark_type: str | None = None      # e.g. "gpqa_diamond"
+    task_type:      str | None = None      # "coding" | "intelligence" | "agentic"
+    benchmark_type: str | None = None      # response field, e.g. "gpqa_diamond"
     min:            float | None = None    # source-specific scale
     max:            float | None = None
 ```

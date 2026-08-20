@@ -48,7 +48,7 @@ def main(argv: list[str] | None = None) -> int:
     p.add_argument("--structured", action="store_true", default=False)
     p.add_argument("--benchmark-source", default=None)
     p.add_argument("--benchmark-task", default=None,
-                   choices=["coding", "intelligence", "agentic", "search"])
+                   choices=["coding", "intelligence", "agentic"])
     p.add_argument("--benchmark-min", type=float, default=None)
     p.add_argument("--api-key", default=os.environ.get("OPENROUTER_API_KEY"))
     p.add_argument("--no-cache", action="store_true")

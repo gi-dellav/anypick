@@ -55,9 +55,10 @@ class BenchmarkThreshold:
 
 * `source` narrows to one feed (`"artificial-analysis"`, `"openrouter"`,
   `"design-arena"`). `None` = any source.
-* `task_type` narrows to `"coding" | "intelligence" | "agentic" | "search"`.
-* `benchmark_type` narrows to a specific OpenRouter benchmark
-  (e.g. `"gpqa_diamond"`, `"search_widesearch"`).
+* `task_type` narrows to `"coding" | "intelligence" | "agentic"`.
+* `benchmark_type` narrows **client-side** to a specific OpenRouter benchmark
+  response field (e.g. `"gpqa_diamond"`, `"tau_bench_verified_airline"`). It is
+  *not* a server query parameter on `/api/v1/benchmarks`.
 * `min`/`max` are on the **source's native scale**
   (artificial-analysis ~0–100, openrouter 0–1). See
   [`architecture.md`](architecture.md) §"Why `score` is not re-normalized".

@@ -8,13 +8,35 @@ shapes, and the mapping rules used by `anypick.openrouter`.
 
 | purpose | method | URL | auth |
 |---|---|---|---|
-| list models | GET | `https://openrouter.ai/api/v1/models` | none |
+| list models | GET | `https://openrouter.ai/api/v1/models` | none (public) |
+| get one model | GET | `https://openrouter.ai/api/v1/model/{author}/{slug}` | none (public) |
 | list benchmarks | GET | `https://openrouter.ai/api/v1/benchmarks` | `Authorization: Bearer <key>` |
 
 Benchmarks are rate-limited: **30 req/min per key**, **500 req/day per account**.
-The models endpoint is free and unauthenticated.
+The models endpoints are public and unauthenticated.
+
+Optional headers (not sent by v1) that OpenRouter uses for rankings:
+`HTTP-Referer: <site url>` and `X-OpenRouter-Title: <app name>`.
+
+> The single-model endpoint URL uses a **singular** path segment
+> `/model/{author}/{slug}` (not `/models/...`). It accepts variant suffixes
+> (e.g. `openai/gpt-4:free`) and resolves known slug aliases. anypick v1 does
+> not use it — it always fetches the full catalog via `/models` — but it is
+> available for a future single-model fast path.
 
 ## Models — `GET /api/v1/models`
+
+### Query parameters (all optional; v1 obtainer fetches the full list)
+
+| param | values / type | meaning |
+|---|---|---|
+| `offset` | int (≥0) | records to skip for pagination |
+| `limit` | int (1–1000, default 500) | max records; when `offset`+`limit` omitted, full list returned |
+| `category` | `programming` \| `roleplay` \| `marketing` \| `marketing/seo` \| `technology` \| `science` \| `translation` \| `legal` \| `finance` \| `health` \| `trivia` \| `academia` | filter by use case |
+| `supported_parameters` | comma-separated | keep models supporting these params (e.g. `temperature,tools`) |
+| `output_modalities` | comma-separated or `all` (default `text`) | filter by output modality |
+| `sort` | `most-popular` \| `newest` \| `top-weekly` \| `pricing-low-to-high` \| `pricing-high-to-low` \| `context-high-to-low` \| `throughput-high-to-low` \| `latency-low-to-high` \| `intelligence-high-to-low` \| `coding-high-to-low` \| `agentic-high-to-low` \| `design-arena-elo-high-to-low` | server-side sort |
+| `use_rss` | `"true"` | return results as an RSS feed |
 
 ### Envelope
 
@@ -100,8 +122,15 @@ Free models report `"0"` strings; these parse to `0.0`.
 | param | values | meaning |
 |---|---|---|
 | `source` | `artificial-analysis` \| `design-arena` \| `openrouter` | narrow to one feed; omitted = all |
-| `task_type` | `coding` \| `intelligence` \| `agentic` \| `search` | narrow by task |
-| `benchmark_type` | `gpqa_diamond`, `tau_bench_verified_airline`, `search_browsecomp`, `search_hle`, `search_dsqa`, `search_widesearch` | one exact OpenRouter benchmark |
+| `task_type` | `coding` \| `intelligence` \| `agentic` | narrow by task; for artificial-analysis maps to the index, for design-arena maps to the category |
+| `arena` | `models` \| `builders` \| `agents` | design-arena only; defaults to `models` when `source=design-arena` |
+| `category` | `codecategories` \| `uicomponent` \| `gamedev` \| `3d` \| `dataviz` \| `image` \| `video` \| `svg` | design-arena only; one category within the arena |
+| `max_results` | int (≥1) | cap the number of items; omitted = all matching |
+
+> **`benchmark_type` is not a server query parameter.** It is a *response*
+> field on `openrouter`-source items (e.g. `gpqa_diamond`,
+> `tau_bench_verified_airline`). anypick narrows on it **client-side**
+> (see `BenchmarkThreshold.benchmark_type` in [`filters.md`](../filters.md)).
 
 ### Envelope
 
@@ -163,9 +192,14 @@ Map → `BenchmarkScore`:
 
 #### `design-arena`
 
-Category-mapped shape. v1 maps the category to `score` via the provider's
-published category→score table; `benchmark_type` = the category name. (The
-exact table is recorded in `anypick/openrouter.py`.)
+Narrowing happens server-side via the `arena` (`models` | `builders` |
+`agents`) and `category` (`codecategories`, `uicomponent`, `gamedev`, `3d`,
+`dataviz`, `image`, `video`, `svg`) query parameters. OpenRouter does **not**
+publish a fixed response item shape for this source, so
+`OpenRouterBenchmarkObtainer` maps it defensively: it records the item's
+`category` under `BenchmarkScore.benchmark_type` and takes the first available
+numeric score field (`score`, `elo`, `arena_elo`, `category_score`). The
+picker treats the score opaquely on its native scale.
 
 ## Join
 

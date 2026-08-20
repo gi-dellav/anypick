@@ -17,8 +17,14 @@ Returns `{data, total_count, links}`. Each model entry has:
 ### Benchmarks — `GET https://openrouter.ai/api/v1/benchmarks` (requires `Authorization: Bearer <key>`)
 Query params:
 - `source` ∈ `artificial-analysis` | `design-arena` | `openrouter`
-- `task_type` ∈ `coding` | `intelligence` | `agentic` | `search`
-- `benchmark_type` ∈ `gpqa_diamond`, `tau_bench_verified_airline`, `search_browsecomp`, `search_hle`, `search_dsqa`, `search_widesearch`
+- `task_type` ∈ `coding` | `intelligence` | `agentic`
+- `arena` ∈ `models` | `builders` | `agents` (design-arena only; defaults to `models`)
+- `category` ∈ `codecategories` | `uicomponent` | `gamedev` | `3d` | `dataviz` | `image` | `video` | `svg` (design-arena only)
+- `max_results` ∈ int ≥ 1 (cap; omitted = all matching)
+
+> `benchmark_type` is a **response field** on `openrouter`-source items
+> (e.g. `gpqa_diamond`, `tau_bench_verified_airline`), not a server query
+> param. Narrowing on it is done client-side.
 
 Rate limited: 30 req/min per key, 500 req/day per account.
 

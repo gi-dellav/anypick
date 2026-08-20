@@ -54,8 +54,8 @@ first job is to translate its raw payload into these.
 |---|---|---|
 | `model_id` | `str` | joins to `Model.id` |
 | `source` | `str` | e.g. `"artificial-analysis"`, `"openrouter"` |
-| `task_type` | `str \| None` | `"coding" \| "intelligence" \| "agentic" \| "search"` |
-| `benchmark_type` | `str \| None` | e.g. `"gpqa_diamond"`, `"search_widesearch"` |
+| `task_type` | `str \| None` | `"coding" \| "intelligence" \| "agentic"` |
+| `benchmark_type` | `str \| None` | response field, e.g. `"gpqa_diamond"`, `"tau_bench_verified_airline"` |
 | `score` | `float` | the single comparable number for this source |
 | `accuracy` | `float \| None` | raw accuracy when the source exposes it |
 | `stddev` | `float \| None` | |

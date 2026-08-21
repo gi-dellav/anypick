@@ -68,7 +68,7 @@ def test_cheapest_with_floor():
     f = ModelFilters(
         requires_tools=True,
         min_context_length=128_000,
-        min_benchmark=BenchmarkThreshold(task_type="coding", min=60),
+        min_benchmarks=[BenchmarkThreshold(task_type="coding", min=60)],
     )
     sel = pick_best(models, scores, f, "cheapest_with_floor")
     # all three pass the floor (65.8, 60.0, 80.5); cheapest is llama
@@ -84,7 +84,7 @@ def test_cheapest_with_floor_excludes_below_threshold():
     f = ModelFilters(
         requires_tools=True,
         min_context_length=128_000,
-        min_benchmark=BenchmarkThreshold(task_type="coding", min=61),
+        min_benchmarks=[BenchmarkThreshold(task_type="coding", min=61)],
     )
     sel = pick_best(models, scores, f, "cheapest_with_floor")
     # llama (60.0) now dropped; cheapest of {gpt-4o, qwen} = qwen (4.5e-7 < 2.5e-6)
@@ -98,7 +98,7 @@ def test_best_score_picks_highest():
     f = ModelFilters(
         requires_tools=True,
         min_context_length=128_000,
-        min_benchmark=BenchmarkThreshold(task_type="coding"),
+        min_benchmarks=[BenchmarkThreshold(task_type="coding")],
     )
     sel = pick_best(models, scores, f, "best_score")
     assert sel.model.id == "qwen/qwen3.8-27b"
@@ -111,7 +111,7 @@ def test_best_value():
     f = ModelFilters(
         requires_tools=True,
         min_context_length=128_000,
-        min_benchmark=BenchmarkThreshold(task_type="coding"),
+        min_benchmarks=[BenchmarkThreshold(task_type="coding")],
     )
     sel = pick_best(models, scores, f, "best_value")
     # value = cost/score; llama has the lowest (best) ratio
@@ -127,7 +127,7 @@ def test_best_score_uses_source_scoping():
     f = ModelFilters(
         requires_tools=True,
         min_context_length=128_000,
-        min_benchmark=BenchmarkThreshold(source="openrouter", benchmark_type="gpqa_diamond"),
+        min_benchmarks=[BenchmarkThreshold(source="openrouter", benchmark_type="gpqa_diamond")],
     )
     sel = pick_best(models, scores, f, "best_score")
     # only openrouter gpqa scores: gpt-4o 0.72, llama 0.41 -> gpt-4o wins
@@ -152,14 +152,14 @@ def test_cheapest_with_floor_without_threshold_errors():
     models = _catalog()
     scores = scores_from_fixture()
     f = ModelFilters(requires_tools=True)
-    with pytest.raises(ValueError, match="min_benchmark"):
+    with pytest.raises(ValueError, match="min_benchmarks"):
         pick_best(models, scores, f, "cheapest_with_floor")
 
 
 def test_best_score_without_threshold_errors():
     models = _catalog()
     scores = scores_from_fixture()
-    with pytest.raises(ValueError, match="min_benchmark"):
+    with pytest.raises(ValueError, match="min_benchmarks"):
         pick_best(models, scores, None, "best_score")
 
 

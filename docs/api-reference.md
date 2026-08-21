@@ -51,7 +51,7 @@ sel = anypick(
         max_prompt_price=2e-6,
         min_context_length=128_000,
         requires_tools=True,
-        min_benchmark=BenchmarkThreshold(task_type="coding", min=60),
+        min_benchmarks=[BenchmarkThreshold(task_type="coding", min=60)],
     ),
     strategy="cheapest_with_floor",
     openrouter_api_key=os.environ["OPENROUTER_API_KEY"],
@@ -82,23 +82,46 @@ obtainer or a cached file). Raises `NoModelsFound` if filters empty the set.
 ```python
 @dataclass
 class ModelFilters:
-    max_prompt_price:             float | None = None
-    max_completion_price:         float | None = None
-    max_expected_cost:            float | None = None   # α·prompt + β·completion
-    expected_cost_weights:        tuple[float, float] = (1.0, 1.0)  # (α, β)
-    min_context_length:           int | None = None
-    modalities_in:                list[str] | None = None     # model inputs ⊇ these
-    output_modalities_in:         list[str] | None = None
-    requires_tools:               bool | None = None
-    requires_reasoning:           bool | None = None
-    requires_structured_outputs:  bool | None = None
-    exclude_ids:                  list[str] | None = None
-    min_benchmark:                BenchmarkThreshold | None = None
-    max_benchmark:                BenchmarkThreshold | None = None
+    # ids / makers
+    include_ids:                 list[str] | None = None
+    exclude_ids:                 list[str] | None = None
+    include_makers:              list[str] | None = None     # maker = id prefix before '/'
+    exclude_makers:              list[str] | None = None
+    # price (USD/token)
+    min_prompt_price:            float | None = None
+    max_prompt_price:            float | None = None
+    min_completion_price:        float | None = None
+    max_completion_price:        float | None = None
+    min_expected_cost:           float | None = None         # α·prompt + β·completion
+    max_expected_cost:           float | None = None
+    expected_cost_weights:       tuple[float, float] = (1.0, 1.0)  # (α, β)
+    max_cache_read_price:        float | None = None
+    # context
+    min_context_length:          int | None = None
+    max_context_length:          int | None = None
+    # modalities (input)
+    modalities_in:               list[str] | None = None     # inputs ⊇ these
+    modalities_exactly:          list[str] | None = None     # inputs == these
+    excludes_modalities:         list[str] | None = None     # inputs ∩ these = ∅
+    # modalities (output)
+    output_modalities_in:        list[str] | None = None
+    output_modalities_exactly:   list[str] | None = None
+    excludes_output_modalities:  list[str] | None = None
+    # capabilities (tri-state: None=ignore, True=require, False=forbid)
+    requires_tools:              bool | None = None
+    requires_reasoning:          bool | None = None
+    requires_structured_outputs: bool | None = None
+    # benchmarks (each list is a logical AND)
+    min_benchmarks:              list[BenchmarkThreshold] | None = None
+    max_benchmarks:              list[BenchmarkThreshold] | None = None
 ```
 
-A `ModelFilters` object is a pure spec — no I/O. Apply it with
-`apply_filters(models, scores, filters) -> list[Model]`.
+Capability flags are **tri-state**: `None` ignores the dimension, `True`
+requires it, `False` forbids it. `min_benchmarks` / `max_benchmarks` are lists
+(a model must satisfy *every* threshold); the strategies rank on the first
+`min_benchmarks` threshold. See [`filters.md`](filters.md) for the full
+semantics, including the **maker** derivation and the benchmark unknown-≠-zero
+rule.
 
 ### `BenchmarkThreshold`
 
@@ -126,17 +149,21 @@ f = (pred.price_below(prompt=1e-6)
 Combinators: `&` (and), `|` (or), `~` (not). A `ModelFilters` compiles to a
 `Predicate` internally, so both forms feed the same engine.
 
-Available predicates:
+Available predicates (see [`filters.md`](filters.md) for the full table):
 
 | predicate | keeps model if |
 |---|---|
+| `pred.id_in([...])` / `pred.id_not_in([...])` | id in / not in list |
+| `pred.maker_in([...])` / `pred.maker_not_in([...])` | maker in / not in list |
 | `pred.price_below(*, prompt=None, completion=None)` | each given price ≤ bound |
+| `pred.price_above(*, prompt=None, completion=None)` | each given price ≥ bound |
 | `pred.expected_cost_below(max, weights=(α,β))` | `α·prompt+β·completion ≤ max` |
-| `pred.context_at_least(n)` | `context_length ≥ n` |
-| `pred.modalities_in([...])` | inputs ⊇ given set |
-| `pred.output_modalities_in([...])` | outputs ⊇ given set |
-| `pred.supports_tools()` / `supports_reasoning()` / `supports_structured_outputs()` | flag true |
-| `pred.id_not_in([...])` | id not in list |
+| `pred.expected_cost_above(min, weights=(α,β))` | `α·prompt+β·completion ≥ min` |
+| `pred.cache_read_price_below(max)` | `cache_read_price ≤ max` |
+| `pred.context_at_least(n)` / `pred.context_at_most(n)` | `context_length` ≥ / ≤ `n` |
+| `pred.modalities_in([...])` / `pred.modalities_exactly([...])` / `pred.modalities_not_in([...])` | inputs ⊇ / == / ∅ given set |
+| `pred.output_modalities_in` / `_exactly` / `_not_in` | as above, for outputs |
+| `pred.supports_tools()` / `supports_reasoning()` / `supports_structured_outputs()` | flag true (use `~` to forbid) |
 | `pred.benchmark_above(*, source=None, task_type=None, benchmark_type=None, min=None)` | some matching score ≥ `min` |
 | `pred.benchmark_below(*, ..., max=None)` | some matching score ≤ `max` |
 
@@ -147,13 +174,14 @@ Available predicates:
 | strategy | objective | needs scores? |
 |---|---|---|
 | `cheapest` | minimize `prompt + completion` (or `expected_cost` if weights set) | no |
-| `cheapest_with_floor` | minimize price among models satisfying `min_benchmark` | yes |
-| `best_score` | maximize `score` for the `source`/`task_type` in `min_benchmark`; tie-break by price | yes |
+| `cheapest_with_floor` | minimize price among models satisfying the first `min_benchmarks` threshold | yes |
+| `best_score` | maximize `score` for the first `min_benchmarks` threshold's `source`/`task_type`; tie-break by price | yes |
 | `best_value` | maximize `score / expected_cost` | yes |
 
 For `cheapest_with_floor`, `best_score`, `best_value` the strategy reads the
-`min_benchmark` clause of `ModelFilters` (or an equivalent `pred.benchmark_*`
-predicate) to know *which* score to rank on.
+first `min_benchmarks` threshold of `ModelFilters` (or an equivalent
+`pred.benchmark_*` predicate) to know *which* score to rank on; the remaining
+thresholds still act as filters but do not drive ranking.
 
 ## `Selection`
 

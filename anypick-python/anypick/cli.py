@@ -33,7 +33,7 @@ def _build_filters(args: argparse.Namespace) -> ModelFilters:
         min_context_length=args.min_context,
         requires_tools=args.tools,
         requires_structured_outputs=args.structured,
-        min_benchmark=bt,
+        min_benchmarks=[bt] if bt else None,
     )
 
 
@@ -44,8 +44,10 @@ def main(argv: list[str] | None = None) -> int:
     p.add_argument("--max-prompt", type=float, dest="max_prompt", default=None)
     p.add_argument("--max-completion", type=float, dest="max_completion", default=None)
     p.add_argument("--min-context", type=int, dest="min_context", default=None)
-    p.add_argument("--tools", action="store_true", default=False)
-    p.add_argument("--structured", action="store_true", default=False)
+    p.add_argument("--tools", action="store_const", const=True, default=None,
+                   help="require tool support (default: ignore)")
+    p.add_argument("--structured", action="store_const", const=True, default=None,
+                   help="require structured-output support (default: ignore)")
     p.add_argument("--benchmark-source", default=None)
     p.add_argument("--benchmark-task", default=None,
                    choices=["coding", "intelligence", "agentic"])

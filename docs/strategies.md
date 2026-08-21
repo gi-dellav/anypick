@@ -16,7 +16,7 @@ pick_best(
 1. **Filter** — `apply_filters(models, scores, filters)` → `candidates`.
    If empty → raise `NoModelsFound` with per-clause surviving counts.
 2. **Score each candidate** — for strategies that need benchmarks, look up the
-   candidate's scores matching the `min_benchmark` clause's
+   candidate's scores matching the first `min_benchmarks` threshold's
    `source`/`task_type`/`benchmark_type` (wildcards allowed). Pick the
    **best** matching score per model (max for `best_score`/`best_value`; the
    floor-passing score for `cheapest_with_floor`).
@@ -25,10 +25,10 @@ pick_best(
 
 ## Strategies
 
-| strategy | key (per candidate) | pick | needs `min_benchmark`? |
+| strategy | key (per candidate) | pick | needs `min_benchmarks`? |
 |---|---|---|---|
 | `cheapest` | `expected_cost = α·prompt + β·completion` | min | no |
-| `cheapest_with_floor` | `expected_cost`, restricted to models with a score ≥ `min_benchmark.min` | min | **yes** |
+| `cheapest_with_floor` | `expected_cost`, restricted to models with a score ≥ the first `min_benchmarks` threshold's `min` | min | **yes** |
 | `best_score` | `-score` (then `expected_cost`) | min | **yes** |
 | `best_value` | `expected_cost / score` | min | **yes** |
 
@@ -61,7 +61,7 @@ Carries diagnostic counts so callers can tell which clause was the killer:
 try:
     pick_best(models, scores, filters, "cheapest_with_floor")
 except NoModelsFound as e:
-    print(e.survivors_by_clause)   # {"max_prompt_price": 80, "requires_tools": 64, "min_benchmark": 12}
+    print(e.survivors_by_clause)   # {"max_prompt_price": 80, "requires_tools": 64, "min_benchmarks[0]": 12}
 ```
 
 `survivors_by_clause` is an ordered dict: clause name → count surviving *that*

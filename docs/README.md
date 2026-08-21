@@ -23,7 +23,7 @@ sel = anypick(
         max_prompt_price=2e-6,
         min_context_length=128_000,
         requires_tools=True,
-        min_benchmark=BenchmarkThreshold(task_type="coding", min=60),
+        min_benchmarks=[BenchmarkThreshold(task_type="coding", min=60)],
     ),
     strategy="cheapest_with_floor",
     openrouter_api_key=os.environ["OPENROUTER_API_KEY"],

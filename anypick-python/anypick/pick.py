@@ -55,7 +55,7 @@ def pick_best(
     Raises:
         NoModelsFound: if the filtered set is empty (carries per-clause counts).
         ValueError: if a benchmark-dependent strategy is used without a
-            ``min_benchmark`` (or equivalent ``pred.benchmark_*``) threshold.
+            ``min_benchmarks`` (or equivalent ``pred.benchmark_*``) threshold.
     """
     if strategy not in ("cheapest", "cheapest_with_floor", "best_score", "best_value"):
         raise ValueError(f"unknown strategy: {strategy!r}")
@@ -93,7 +93,7 @@ def pick_best(
         eligible = _with_score(candidates, grouped, threshold, want_above=True)
         eligible = _with_known_price(eligible)
         if not eligible:
-            raise NoModelsFound({"min_benchmark": 0})
+            raise NoModelsFound({"min_benchmarks[0]": 0})
         best = _min(eligible, key=lambda m: (cost(m), m.id))
         chosen_score = _best_matching_score(best, grouped.get(best.id, []), threshold)
     elif strategy == "best_score":
@@ -138,14 +138,20 @@ def pick_best(
 def _require_threshold(
     spec: ModelFilters | None, filters: FilterSpec, strategy: str
 ) -> BenchmarkThreshold:
-    """Resolve the benchmark threshold a benchmark-dependent strategy ranks on."""
-    if spec is not None and spec.min_benchmark is not None:
-        return spec.min_benchmark
-    if spec is not None and spec.max_benchmark is not None:
-        return spec.max_benchmark
+    """Resolve the benchmark threshold a benchmark-dependent strategy ranks on.
+
+    With a list of thresholds, the strategy ranks on the *first* one (the
+    primary quality criterion). The remaining thresholds still act as filters
+    (applied by ``apply_filters``) but do not drive ranking.
+    """
+    if spec is not None:
+        if spec.min_benchmarks:
+            return spec.min_benchmarks[0]
+        if spec.max_benchmarks:
+            return spec.max_benchmarks[0]
     raise ValueError(
-        f"strategy {strategy!r} requires a min_benchmark (or a pred.benchmark_* "
-        "threshold) to know which score to rank on."
+        f"strategy {strategy!r} requires a min_benchmarks threshold (or a "
+        "pred.benchmark_* threshold) to know which score to rank on."
     )
 
 

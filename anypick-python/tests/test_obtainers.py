@@ -60,7 +60,7 @@ def test_anypick_with_fake_obtainers():
         filters=ModelFilters(
             requires_tools=True,
             min_context_length=128_000,
-            min_benchmark=BenchmarkThreshold(task_type="coding", min=60),
+            min_benchmarks=[BenchmarkThreshold(task_type="coding", min=60)],
         ),
         strategy="cheapest_with_floor",
         obtainer=(mo, bo),
@@ -71,7 +71,7 @@ def test_anypick_with_fake_obtainers():
 
 
 def test_anypick_cheapest_works_without_key_when_no_benchmarks_needed():
-    # No min_benchmark, strategy=cheapest -> benchmarks are optional and
+    # No min_benchmarks, strategy=cheapest -> benchmarks are optional and
     # must NOT be fetched.
     models = models_from_fixture()
     scores: list[BenchmarkScore] = []

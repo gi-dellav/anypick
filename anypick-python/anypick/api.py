@@ -9,7 +9,7 @@ from __future__ import annotations
 import os
 from typing import Any
 
-from .filter import ModelFilters
+from .filter import BenchmarkThreshold, ModelFilters
 from .model import BenchmarkScore, Model
 from .obtainer import (
     BenchmarkObtainer,
@@ -94,17 +94,28 @@ def _resolve_obtainers(
 
 
 def _benchmark_kwargs_from_filters(filters: Any) -> dict[str, Any]:
+    """Narrow the benchmark fetch from the filter spec's thresholds.
+
+    The obtainer's ``list_benchmarks`` takes a single ``source``/``task_type``/
+    ``benchmark_type``. With a list of thresholds we narrow the fetch only on a
+    dimension when *every* threshold agrees on the same non-None value; any
+    wildcard (None) or disagreement means we fetch broad and let the filter
+    engine narrow client-side.
+    """
     if not isinstance(filters, ModelFilters):
         return {}
+    thresholds: list[BenchmarkThreshold] = []
+    if filters.min_benchmarks:
+        thresholds.extend(filters.min_benchmarks)
+    if filters.max_benchmarks:
+        thresholds.extend(filters.max_benchmarks)
+    if not thresholds:
+        return {}
     kw: dict[str, Any] = {}
-    bt = filters.min_benchmark or filters.max_benchmark
-    if bt is not None:
-        if bt.source:
-            kw["source"] = bt.source
-        if bt.task_type:
-            kw["task_type"] = bt.task_type
-        if bt.benchmark_type:
-            kw["benchmark_type"] = bt.benchmark_type
+    for name in ("source", "task_type", "benchmark_type"):
+        distinct = {getattr(t, name) for t in thresholds}
+        if len(distinct) == 1 and None not in distinct:
+            kw[name] = next(iter(distinct))
     return kw
 
 
@@ -117,7 +128,7 @@ def _strategy_needs_scores(strategy: Strategy, filters: Any) -> bool:
     if strategy != "cheapest":
         return True
     if isinstance(filters, ModelFilters) and (
-        filters.min_benchmark or filters.max_benchmark
+        filters.min_benchmarks or filters.max_benchmarks
     ):
         return True
     return False

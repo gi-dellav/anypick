@@ -106,10 +106,10 @@ class BenchmarkObtainer(Protocol):
 
 ### Filter DSL
 Two flavors:
-- **Spec (primary):** `ModelFilters(max_prompt_price=…, min_context_length=…, modalities_in=[…], requires_tools=…, min_benchmark={"source":…,"task_type":"coding","min":60.0})`
-- **Combinable predicates (advanced):** `pred.price_below(prompt=…) & pred.context_at_least(…) & pred.supports_tools()`
+- **Spec (primary):** `ModelFilters(include_makers=[…], max_prompt_price=…, min_context_length=…, modalities_exactly=[…], requires_tools=…, min_benchmarks=[BenchmarkThreshold(task_type="coding", min=60)])`
+- **Combinable predicates (advanced):** `pred.maker_in([…]) & pred.price_below(prompt=…) & pred.context_at_least(…) & pred.supports_tools()`
 
-Benchmark-aware filters (`min_benchmark`, `benchmark_above`) use the joined scores table.
+`min_benchmarks` / `max_benchmarks` are lists (logical AND); capability flags are tri-state (`None`=ignore, `True`=require, `False`=forbid); `include_makers` / `exclude_makers` whitelist/blacklist by the id prefix before `/`. Benchmark-aware filters (`min_benchmarks`, `benchmark_above`) use the joined scores table.
 
 ### `pick_best`
 ```python
@@ -126,7 +126,7 @@ Raise `NoModelsFound` on empty filtered set. Return a `Selection(model, score, p
 ### High-level convenience
 ```python
 sel = anypick(
-    filters=ModelFilters(max_prompt_price=1e-6, min_benchmark={"task_type":"coding","min":60}),
+    filters=ModelFilters(max_prompt_price=1e-6, min_benchmarks=[BenchmarkThreshold(task_type="coding", min=60)]),
     strategy="cheapest",
     obtainer="openrouter",
     openrouter_api_key=os.environ["OPENROUTER_API_KEY"],

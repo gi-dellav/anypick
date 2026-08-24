@@ -22,6 +22,7 @@ anypick(
     strategy: Strategy = "cheapest",
     obtainer: str | tuple = "openrouter",
     openrouter_api_key: str | None = None,
+    vercel_api_key: str | None = None,
     cache: Cache | bool = True,
     refresh: bool = False,
 ) -> Selection
@@ -35,8 +36,9 @@ Arguments:
 |---|---|---|
 | `filters` | `None` | spec or predicate; `None` = no filtering |
 | `strategy` | `"cheapest"` | one of `Strategy` |
-| `obtainer` | `"openrouter"` | provider id, or a `(ModelListObtainer, BenchmarkObtainer)` pair |
+| `obtainer` | `"openrouter"` | provider id (`"openrouter"` or `"vercel"`), or a `(ModelListObtainer, BenchmarkObtainer)` pair |
 | `openrouter_api_key` | `None` | falls back to `OPENROUTER_API_KEY` env var (benchmarks only) |
+| `vercel_api_key` | `None` | falls back to `VERCEL_AI_GATEWAY_API_KEY` env var (optional; the gateway's models endpoint is public) |
 | `cache` | `True` | `True` → default `FileCache`; `False` → no cache; or a `Cache` instance |
 | `refresh` | `False` | bypass cache for this call |
 
@@ -213,6 +215,12 @@ Built-in implementations:
 
 * `OpenRouterModelObtainer(base_url=..., api_key=None)`
 * `OpenRouterBenchmarkObtainer(api_key, base_url=...)` — key required.
+* `VercelModelObtainer(base_url=..., api_key=None)` — models-only; the gateway
+  has no benchmark feed, so pair it with `NoopBenchmarkObtainer()` (or use
+  `obtainer="vercel"`, which wires that pair for you). See
+  [`providers/vercel.md`](providers/vercel.md).
+* `NoopBenchmarkObtainer` — returns `[]`; for providers that expose no
+  benchmark feed.
 
 Caching wrappers:
 
@@ -232,5 +240,6 @@ Caches:
 | `RateLimited` | 429 after backoff exhausted |
 | `ProviderError` | other non-2xx (carries status + body) |
 
-See [`architecture.md`](architecture.md) for the internal contract and
-[`providers/openrouter.md`](providers/openrouter.md) for OpenRouter specifics.
+See [`architecture.md`](architecture.md) for the internal contract,
+[`providers/openrouter.md`](providers/openrouter.md) for OpenRouter specifics,
+and [`providers/vercel.md`](providers/vercel.md) for the Vercel AI Gateway.

@@ -11,6 +11,7 @@ Public API:
     Model, BenchmarkScore           normalized types
     ModelListObtainer, BenchmarkObtainer  extension protocols
     OpenRouterModelObtainer, OpenRouterBenchmarkObtainer  first provider impls
+    VercelModelObtainer                          models-only provider (AI Gateway)
     CachedModelObtainer, CachedBenchmarkObtainer, Cache, FileCache, MemoryCache
     Selection, Strategy
     NoModelsFound, BadAuth, RateLimited, ProviderError
@@ -41,12 +42,14 @@ from .obtainer import (
     FileCache,
     MemoryCache,
     ModelListObtainer,
+    NoopBenchmarkObtainer,
 )
 from .openrouter import (
     OpenRouterBenchmarkObtainer,
     OpenRouterModelObtainer,
 )
 from .pick import Selection, Strategy, pick_best
+from .vercel import VercelModelObtainer
 
 __all__ = [
     # one-shot
@@ -69,6 +72,8 @@ __all__ = [
     "BenchmarkObtainer",
     "OpenRouterModelObtainer",
     "OpenRouterBenchmarkObtainer",
+    "VercelModelObtainer",
+    "NoopBenchmarkObtainer",
     "CachedModelObtainer",
     "CachedBenchmarkObtainer",
     "Cache",

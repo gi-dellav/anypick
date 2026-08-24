@@ -2,8 +2,9 @@
 
 This document describes the internal contract shared by **every** provider
 implementation and by the filter/pick layers. Provider-specific quirks live in
-[`providers/openrouter.md`](providers/openrouter.md). The public API is
-documented in [`api-reference.md`](api-reference.md).
+[`providers/openrouter.md`](providers/openrouter.md) and
+[`providers/vercel.md`](providers/vercel.md). The public API is documented in
+[`api-reference.md`](api-reference.md).
 
 ## Goals
 
@@ -81,6 +82,10 @@ A `BenchmarkObtainer` must produce `score` as follows:
 | `artificial-analysis` | the index matching the requested `task_type` (`coding`→`coding_index`, `agentic`→`agentic_index`, `intelligence`→`intelligence_index`); if `task_type` is `None`, fall back to `intelligence_index`. |
 | `openrouter` | `score = accuracy`. `benchmark_type` and `accuracy`/`stddev` are preserved. |
 | `design-arena` | category → score, per the provider's category map. |
+
+Providers that expose no benchmark feed (e.g. the Vercel AI Gateway) pair their
+`ModelListObtainer` with `NoopBenchmarkObtainer`, which yields no scores; only
+price-only strategies (`cheapest`) are meaningful against them.
 
 ## Obtainer contracts
 

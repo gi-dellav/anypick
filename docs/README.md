@@ -11,6 +11,7 @@ benchmarks, then pick the best survivor via a strategy.
 | [filters.md](filters.md) | filter DSL — spec form + predicate combinators |
 | [strategies.md](strategies.md) | `pick_best` strategies & `Selection` |
 | [providers/openrouter.md](providers/openrouter.md) | OpenRouter endpoint contracts & mapping rules |
+| [providers/vercel.md](providers/vercel.md) | Vercel AI Gateway models endpoint & mapping rules (models-only) |
 
 ## 30-second tour
 

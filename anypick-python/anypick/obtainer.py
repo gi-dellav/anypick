@@ -137,6 +137,26 @@ class FileCache:
 # ---------------------------------------------------------------------------
 
 
+class NoopBenchmarkObtainer:
+    """A :class:`BenchmarkObtainer` that always returns no scores.
+
+    Used to wire providers that expose a model catalog but no benchmark feed
+    (e.g. the Vercel AI Gateway models endpoint) into :func:`anypick` without
+    forcing the caller to pass a tuple. Strategies that need scores will simply
+    find none, so only price-only strategies are meaningful with this obtainer.
+    """
+
+    def list_benchmarks(
+        self,
+        *,
+        source: str | None = None,
+        task_type: str | None = None,
+        benchmark_type: str | None = None,
+        **opts: Any,
+    ) -> list[BenchmarkScore]:
+        return []
+
+
 class CachedModelObtainer:
     """Wraps a :class:`ModelListObtainer` with a TTL cache."""
 

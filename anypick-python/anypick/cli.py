@@ -16,7 +16,6 @@ from . import (
     anypick,
     pick_best,
 )
-from .openrouter import OpenRouterBenchmarkObtainer, OpenRouterModelObtainer
 
 
 def _build_filters(args: argparse.Namespace) -> ModelFilters:
@@ -52,17 +51,30 @@ def main(argv: list[str] | None = None) -> int:
     p.add_argument("--benchmark-task", default=None,
                    choices=["coding", "intelligence", "agentic"])
     p.add_argument("--benchmark-min", type=float, default=None)
-    p.add_argument("--api-key", default=os.environ.get("OPENROUTER_API_KEY"))
+    p.add_argument("--provider", default="openrouter",
+                   choices=["openrouter", "vercel"],
+                   help="model catalog provider (default: openrouter)")
+    p.add_argument("--api-key", default=None,
+                   help="provider API key; defaults to OPENROUTER_API_KEY "
+                        "or VERCEL_AI_GATEWAY_API_KEY per --provider")
     p.add_argument("--no-cache", action="store_true")
     p.add_argument("--refresh", action="store_true")
     p.add_argument("--json", action="store_true", help="emit full Selection as JSON")
     args = p.parse_args(argv)
 
     filters = _build_filters(args)
+    api_key = args.api_key
+    if api_key is None:
+        api_key = os.environ.get(
+            "OPENROUTER_API_KEY" if args.provider == "openrouter"
+            else "VERCEL_AI_GATEWAY_API_KEY"
+        )
     sel = anypick(
         filters=filters,
         strategy=args.strategy,
-        openrouter_api_key=args.api_key,
+        obtainer=args.provider,
+        openrouter_api_key=api_key if args.provider == "openrouter" else None,
+        vercel_api_key=api_key if args.provider == "vercel" else None,
         cache=not args.no_cache,
         refresh=args.refresh,
     )

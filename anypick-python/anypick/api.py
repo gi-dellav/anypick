@@ -19,12 +19,14 @@ from .obtainer import (
     FileCache,
     MemoryCache,
     ModelListObtainer,
+    NoopBenchmarkObtainer,
 )
 from .openrouter import (
     OpenRouterBenchmarkObtainer,
     OpenRouterModelObtainer,
 )
 from .pick import Selection, Strategy, pick_best
+from .vercel import VercelModelObtainer
 
 
 def anypick(
@@ -33,6 +35,7 @@ def anypick(
     strategy: Strategy = "cheapest",
     obtainer: str | tuple[ModelListObtainer, BenchmarkObtainer] = "openrouter",
     openrouter_api_key: str | None = None,
+    vercel_api_key: str | None = None,
     cache: Cache | bool = True,
     refresh: bool = False,
 ) -> Selection:
@@ -41,15 +44,22 @@ def anypick(
     Args:
         filters: a :class:`ModelFilters`, a raw predicate, or None.
         strategy: one of :data:`~anypick.pick.Strategy`.
-        obtainer: ``"openrouter"`` or a ``(ModelListObtainer, BenchmarkObtainer)`` pair.
+        obtainer: ``"openrouter"``, ``"vercel"``, or a
+            ``(ModelListObtainer, BenchmarkObtainer)`` pair. ``"vercel"`` is
+            models-only (no benchmark feed); pair it with a price-only strategy.
         openrouter_api_key: overrides ``OPENROUTER_API_KEY`` (benchmarks only).
+        vercel_api_key: overrides ``VERCEL_AI_GATEWAY_API_KEY`` (optional; the
+            gateway's models endpoint is public, a key only raises the rate
+            ceiling).
         cache: ``True`` (default FileCache), ``False`` (no cache), or a Cache instance.
         refresh: bypass cache for this call.
 
     Returns:
         A :class:`~anypick.pick.Selection`.
     """
-    model_obt, bench_obt = _resolve_obtainers(obtainer, openrouter_api_key, cache, refresh)
+    model_obt, bench_obt = _resolve_obtainers(
+        obtainer, openrouter_api_key, vercel_api_key, cache, refresh
+    )
 
     models = model_obt.list_models()
 
@@ -70,16 +80,21 @@ def anypick(
 
 def _resolve_obtainers(
     obtainer: str | tuple[ModelListObtainer, BenchmarkObtainer],
-    api_key: str | None,
+    openrouter_api_key: str | None,
+    vercel_api_key: str | None,
     cache: Cache | bool,
     refresh: bool,
 ) -> tuple[ModelListObtainer, BenchmarkObtainer]:
     if isinstance(obtainer, tuple):
         model_obt, bench_obt = obtainer
     elif obtainer == "openrouter":
-        key = api_key or os.environ.get("OPENROUTER_API_KEY")
+        key = openrouter_api_key or os.environ.get("OPENROUTER_API_KEY")
         model_obt = OpenRouterModelObtainer(api_key=key)
         bench_obt = OpenRouterBenchmarkObtainer(api_key=key)
+    elif obtainer == "vercel":
+        # Vercel AI Gateway exposes a models catalog but no benchmark feed.
+        model_obt = VercelModelObtainer(api_key=vercel_api_key)
+        bench_obt = NoopBenchmarkObtainer()
     else:
         raise ValueError(f"unknown obtainer provider: {obtainer!r}")
 

@@ -24,7 +24,12 @@ import { VercelModelObtainer } from "./vercel.js";
 export interface AnypickOptions {
   filters?: ModelFilters | null;
   strategy?: Strategy;
+  /** Provider id (`"openrouter"`/`"vercel"`) or a `[ModelListObtainer, BenchmarkObtainer]` pair. */
   obtainer?: string | ObtainerPair;
+  /** Custom model-list obtainer. Overrides the model side of `obtainer`. */
+  modelObtainer?: ModelListObtainer;
+  /** Custom benchmark obtainer. Overrides the benchmark side of `obtainer`. */
+  benchmarkObtainer?: BenchmarkObtainer;
   openrouterApiKey?: string | null;
   vercelApiKey?: string | null;
   cache?: Cache | boolean;
@@ -52,6 +57,8 @@ export async function anypick(opts: AnypickOptions = {}): Promise<Selection> {
 
   const [modelObt, benchObt] = resolveObtainers(
     obtainer,
+    opts.modelObtainer,
+    opts.benchmarkObtainer,
     openrouterApiKey,
     vercelApiKey,
     cache,
@@ -76,6 +83,8 @@ export async function anypick(opts: AnypickOptions = {}): Promise<Selection> {
 
 function resolveObtainers(
   obtainer: string | ObtainerPair,
+  customModel: ModelListObtainer | undefined,
+  customBench: BenchmarkObtainer | undefined,
   openrouterApiKey: string | null,
   vercelApiKey: string | null,
   cache: Cache | boolean,
@@ -83,7 +92,16 @@ function resolveObtainers(
   let modelObt: ModelListObtainer;
   let benchObt: BenchmarkObtainer;
 
-  if (Array.isArray(obtainer)) {
+  if (customModel && customBench) {
+    modelObt = customModel;
+    benchObt = customBench;
+  } else if (customModel) {
+    modelObt = customModel;
+    benchObt = resolveBenchmarkObtainer(obtainer, openrouterApiKey, vercelApiKey);
+  } else if (customBench) {
+    modelObt = resolveModelObtainer(obtainer, openrouterApiKey, vercelApiKey);
+    benchObt = customBench;
+  } else if (Array.isArray(obtainer)) {
     [modelObt, benchObt] = obtainer;
   } else if (obtainer === "openrouter") {
     const key = openrouterApiKey ?? process.env["OPENROUTER_API_KEY"] ?? null;
@@ -139,4 +157,32 @@ function strategyNeedsScores(strategy: Strategy, filters: ModelFilters | null): 
     return true;
   }
   return false;
+}
+
+function resolveModelObtainer(
+  obtainer: string | ObtainerPair,
+  openrouterApiKey: string | null,
+  vercelApiKey: string | null,
+): ModelListObtainer {
+  if (Array.isArray(obtainer)) return obtainer[0];
+  if (obtainer === "openrouter") {
+    const key = openrouterApiKey ?? process.env["OPENROUTER_API_KEY"] ?? null;
+    return new OpenRouterModelObtainer({ apiKey: key });
+  }
+  if (obtainer === "vercel") return new VercelModelObtainer({ apiKey: vercelApiKey });
+  throw new TypeError(`unknown obtainer provider: ${JSON.stringify(obtainer)}`);
+}
+
+function resolveBenchmarkObtainer(
+  obtainer: string | ObtainerPair,
+  openrouterApiKey: string | null,
+  vercelApiKey: string | null,
+): BenchmarkObtainer {
+  if (Array.isArray(obtainer)) return obtainer[1];
+  if (obtainer === "openrouter") {
+    const key = openrouterApiKey ?? process.env["OPENROUTER_API_KEY"] ?? null;
+    return new OpenRouterBenchmarkObtainer({ apiKey: key });
+  }
+  if (obtainer === "vercel") return new NoopBenchmarkObtainer();
+  throw new TypeError(`unknown obtainer provider: ${JSON.stringify(obtainer)}`);
 }

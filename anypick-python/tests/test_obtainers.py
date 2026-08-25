@@ -100,6 +100,72 @@ def test_anypick_raises_no_models_when_filtered_empty():
         )
 
 
+def test_custom_model_obtainer_with_default_benchmark_obtainer():
+    # A custom model obtainer overrides only the model side: the default
+    # openrouter benchmark obtainer supplies the benchmark side. Price-only
+    # strategy never touches benchmarks.
+    models = models_from_fixture()
+    mo = _FakeModelObtainer(models)
+    sel = anypick(
+        filters=ModelFilters(requires_tools=True, min_context_length=128_000),
+        strategy="cheapest",
+        model_obtainer=mo,
+        cache=False,
+    )
+    assert sel.model.id == "cohere/north-mini-code:free"
+
+
+def test_custom_benchmark_obtainer_with_default_model_obtainer():
+    # A custom benchmark obtainer overrides only the benchmark side. We also
+    # pass a custom model obtainer so the test is hermetic (no real network).
+    models = models_from_fixture()
+    scores = scores_from_fixture(task_type="coding")
+    mo = _FakeModelObtainer(models)
+    bo = _FakeBenchmarkObtainer(scores)
+    sel = anypick(
+        filters=ModelFilters(
+            requires_tools=True,
+            min_context_length=128_000,
+            min_benchmarks=[BenchmarkThreshold(task_type="coding", min=60)],
+        ),
+        strategy="cheapest_with_floor",
+        model_obtainer=mo,
+        benchmark_obtainer=bo,
+        cache=False,
+    )
+    assert sel.model.id == "meta-llama/llama-3.3-70b-instruct"
+    assert sel.score.score == 60.0
+
+
+def test_custom_obtainer_used_when_cache_enabled():
+    models = models_from_fixture()
+    mo = _FakeModelObtainer(models)
+    bo = _FakeBenchmarkObtainer([])
+    anypick(
+        filters=ModelFilters(requires_tools=True, min_context_length=128_000),
+        strategy="cheapest",
+        model_obtainer=mo,
+        benchmark_obtainer=bo,
+        cache=MemoryCache(),
+    )
+    assert mo.calls == 1
+
+
+def test_custom_model_obtainer_with_vercel_default_benchmark():
+    # model_obtainer plus a "vercel" obtainer string: the benchmark side
+    # resolves to the vercel default (Noop = no scores).
+    models = models_from_fixture()
+    mo = _FakeModelObtainer(models)
+    sel = anypick(
+        filters=ModelFilters(requires_tools=True, min_context_length=128_000),
+        strategy="cheapest",
+        obtainer="vercel",
+        model_obtainer=mo,
+        cache=False,
+    )
+    assert sel.model.id == "cohere/north-mini-code:free"
+
+
 def test_cache_avoids_second_fetch():
     models = models_from_fixture()
     scores = scores_from_fixture()

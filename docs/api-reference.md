@@ -21,6 +21,8 @@ anypick(
     filters: ModelFilters | Predicate | None = None,
     strategy: Strategy = "cheapest",
     obtainer: str | tuple = "openrouter",
+    model_obtainer: ModelListObtainer | None = None,
+    benchmark_obtainer: BenchmarkObtainer | None = None,
     openrouter_api_key: str | None = None,
     vercel_api_key: str | None = None,
     cache: Cache | bool = True,
@@ -37,6 +39,8 @@ Arguments:
 | `filters` | `None` | spec or predicate; `None` = no filtering |
 | `strategy` | `"cheapest"` | one of `Strategy` |
 | `obtainer` | `"openrouter"` | provider id (`"openrouter"` or `"vercel"`), or a `(ModelListObtainer, BenchmarkObtainer)` pair |
+| `model_obtainer` | `None` | a custom `ModelListObtainer`; overrides the model side of `obtainer` |
+| `benchmark_obtainer` | `None` | a custom `BenchmarkObtainer`; overrides the benchmark side of `obtainer` |
 | `openrouter_api_key` | `None` | falls back to `OPENROUTER_API_KEY` env var (benchmarks only) |
 | `vercel_api_key` | `None` | falls back to `VERCEL_AI_GATEWAY_API_KEY` env var (optional; the gateway's models endpoint is public) |
 | `cache` | `True` | `True` → default `FileCache`; `False` → no cache; or a `Cache` instance |

@@ -74,6 +74,20 @@ sel = anypick(
 )
 ```
 
+Prefer fine-grained control? Pass a custom model and/or benchmark obtainer
+individually with `model_obtainer` / `benchmark_obtainer` — they override the
+corresponding side of `obtainer`:
+
+```python
+from anypick import anypick, MyModelObtainer, MyBenchmarkObtainer
+
+sel = anypick(
+    filters=ModelFilters(requires_tools=True),
+    model_obtainer=MyModelObtainer(),      # custom model catalog
+    benchmark_obtainer=MyBenchmarkObtainer(),  # custom benchmark feed
+)
+```
+
 ## Filters
 
 Filters reduce `(models, scores)` to a subset before a strategy picks a

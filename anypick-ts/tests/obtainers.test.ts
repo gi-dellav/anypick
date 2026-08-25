@@ -93,6 +93,49 @@ describe("anypick() wiring", () => {
       anypick({ obtainer: "mintlify" as never, cache: false }),
     ).rejects.toThrow(/unknown obtainer/);
   });
+
+  it("uses a custom modelObtainer with the default benchmark obtainer", async () => {
+    const models = modelsFromFixture();
+    const sel = await anypick({
+      filters: new ModelFilters({ requiresTools: true, minContextLength: 128_000 }),
+      strategy: "cheapest",
+      modelObtainer: new FakeModelObtainer(models),
+      cache: false,
+    });
+    expect(sel.model.id).toBe("cohere/north-mini-code:free");
+  });
+
+  it("uses a custom benchmarkObtainer with the default model obtainer", async () => {
+    const models = modelsFromFixture();
+    const scores = scoresFromFixture("coding");
+    const sel = await anypick({
+      filters: new ModelFilters({
+        requiresTools: true,
+        minContextLength: 128_000,
+        minBenchmarks: [new BenchmarkThreshold({ taskType: "coding", min: 60 })],
+      }),
+      strategy: "cheapest_with_floor",
+      benchmarkObtainer: new FakeBenchmarkObtainer(scores),
+      modelObtainer: new FakeModelObtainer(models),
+      cache: false,
+    });
+    expect(sel.model.id).toBe("meta-llama/llama-3.3-70b-instruct");
+    expect(sel.score!.score).toBe(60.0);
+  });
+
+  it("custom obtainers are wrapped when a cache is enabled", async () => {
+    const models = modelsFromFixture();
+    const mo = new FakeModelObtainer(models);
+    const bo = new FakeBenchmarkObtainer([]);
+    await anypick({
+      filters: new ModelFilters({ requiresTools: true, minContextLength: 128_000 }),
+      strategy: "cheapest",
+      modelObtainer: mo,
+      benchmarkObtainer: bo,
+      cache: new MemoryCache(),
+    });
+    expect(mo.calls).toBe(1);
+  });
 });
 
 describe("cache", () => {

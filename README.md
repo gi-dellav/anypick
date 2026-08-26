@@ -1,5 +1,12 @@
 # anypick
 
+<p align="center">
+  <a href="https://www.npmjs.com/package/anypick-ts"><img src="https://img.shields.io/npm/v/anypick-ts" alt="npm version"></a>
+  <a href="https://www.npmjs.com/package/anypick-ts"><img src="https://img.shields.io/npm/dm/anypick-ts" alt="npm downloads"></a>
+  <a href="https://pypi.org/project/anypick/"><img src="https://img.shields.io/pypi/v/anypick" alt="PyPI version"></a>
+  <a href="https://pypi.org/project/anypick/"><img src="https://img.shields.io/pypi/pyversions/anypick" alt="Python versions"></a>
+</p>
+
 Select the best LLM across providers using filters over capabilities, pricing,
 and benchmarks, then pick a winner with a strategy. anypick only selects — you
 wire the chosen model into your chat client.

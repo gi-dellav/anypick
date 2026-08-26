@@ -1,5 +1,5 @@
 {
-  "name": "anypick",
+  "name": "anypick-ts",
   "version": "0.1.0",
   "description": "Select LLMs using filters across capabilities, prices and benchmarks",
   "license": "MIT",

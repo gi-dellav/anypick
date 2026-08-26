@@ -1,5 +1,10 @@
 # anypick-ts
 
+<p>
+  <a href="https://www.npmjs.com/package/anypick-ts"><img src="https://img.shields.io/npm/v/anypick-ts" alt="npm version"></a>
+  <a href="https://www.npmjs.com/package/anypick-ts"><img src="https://img.shields.io/npm/dm/anypick-ts" alt="npm downloads"></a>
+</p>
+
 Select an LLM across providers using filters over **capabilities**, **pricing**
 and **benchmarks**, then pick the best survivor via a strategy. A TypeScript
 port of [`anypick`](../anypick-python) (same design, same fixtures, same
@@ -9,7 +14,7 @@ chat client is your job.
 ## Install
 
 ```bash
-npm install anypick            # once published
+npm install anypick-ts          # https://www.npmjs.com/package/anypick-ts
 # or from source:
 npm install && npm run build
 ```
@@ -19,7 +24,7 @@ Requires Node.js ≥ 18 (uses the global `fetch`).
 ## 30-second tour
 
 ```ts
-import { anypick, ModelFilters, BenchmarkThreshold } from "anypick";
+import { anypick, ModelFilters, BenchmarkThreshold } from "anypick-ts";
 
 const sel = await anypick({
   filters: new ModelFilters({

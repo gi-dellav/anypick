@@ -1,5 +1,10 @@
 # anypick-python
 
+<p>
+  <a href="https://pypi.org/project/anypick/"><img src="https://img.shields.io/pypi/v/anypick" alt="PyPI version"></a>
+  <a href="https://pypi.org/project/anypick/"><img src="https://img.shields.io/pypi/pyversions/anypick" alt="Python versions"></a>
+</p>
+
 Python implementation of `anypick`. See the project [docs](../docs) for the
 full design.
 

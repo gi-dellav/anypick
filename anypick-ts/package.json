@@ -1,8 +1,17 @@
 {
   "name": "anypick",
   "version": "0.1.0",
-  "description": "Select an LLM across providers using capability, pricing and benchmark filters, then pick the best.",
+  "description": "Select LLMs using filters across capabilities, prices and benchmarks",
   "license": "MIT",
+  "author": "Giuseppe Della Vedova",
+  "homepage": "https://github.com/gi-dellav/anypick",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/gi-dellav/anypick.git"
+  },
+  "bugs": {
+    "url": "https://github.com/gi-dellav/anypick/issues"
+  },
   "type": "module",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
@@ -15,10 +24,16 @@
   "bin": {
     "anypick": "dist/cli.js"
   },
+  "files": [
+    "dist",
+    "README.md",
+    "LICENSE"
+  ],
   "scripts": {
     "build": "tsc",
     "test": "vitest run",
-    "clean": "rm -rf dist"
+    "clean": "rm -rf dist",
+    "prepare": "npm run build"
   },
   "engines": {
     "node": ">=18"

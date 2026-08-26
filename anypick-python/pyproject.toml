@@ -1,21 +1,40 @@
 [build-system]
-requires = ["setuptools>=68"]
+requires = ["setuptools>=77"]
 build-backend = "setuptools.build_meta"
 
 [project]
 name = "anypick"
 version = "0.1.0"
-description = "Select an LLM across providers using capability, pricing and benchmark filters, then pick the best."
+description = "Select LLMs using filters across capabilities, prices and benchmarks"
 readme = "README.md"
 requires-python = ">=3.10"
-license = { text = "MIT" }
-authors = [{ name = "anypick" }]
+license = "MIT"
+license-files = ["LICENSE"]
+authors = [
+    { name = "Giuseppe Della Vedova" },
+]
+classifiers = [
+    "Development Status :: 3 - Alpha",
+    "Intended Audience :: Developers",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3 :: Only",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+    "Topic :: Software Development :: Libraries :: Python Modules",
+]
 dependencies = [
     "requests>=2.28",
 ]
 
 [project.optional-dependencies]
 dev = ["pytest>=7", "pytest-cov"]
+
+[project.urls]
+Homepage = "https://github.com/gi-dellav/anypick"
+Repository = "https://github.com/gi-dellav/anypick"
+Issues = "https://github.com/gi-dellav/anypick/issues"
 
 [project.scripts]
 anypick = "anypick.cli:main"
